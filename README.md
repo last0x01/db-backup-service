@@ -33,7 +33,7 @@ Automated Windows Service for performing scheduled full backups of a SQL Server 
   <add key="ConnectionString" value="Server=YOUR_SERVER;Database=YOUR_DATABASE;Trusted_Connection=True;" />
   <add key="BackupFolder" value="C:\DatabaseBackups\" />
   <add key="LogFolder" value="C:\DatabaseBackups\Logs\" />
-  <add key="BackupIntervalMinutes" value="60" />
+  <add key="BackupIntervalMinutes" value="1" />
 </appSettings>
 ```
 
@@ -64,15 +64,18 @@ sc delete DatabaseBackUpService
 ### Sample output:
 ```text
 [2026-01-16 16:00:00] Service Started.
-[2026-01-16 16:00:01] Backup schedule Initiated: every 60 minute(s).
-[2026-01-16 17:00:05] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_170005.bak
-[2026-01-16 18:00:05] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_180005.bak
-[2026-01-16 18:30:00] Service Stopped.
+[2026-01-16 16:00:01] Backup schedule Initiated: every 1 minute(s).
+[2026-01-16 16:01:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160101.bak
+[2026-01-16 16:02:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160201.bak
+[2026-01-16 16:03:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160301.bak
+[2026-01-16 16:04:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160401.bak
+[2026-01-16 16:05:00] Service Stopped.
+
 ```
 
 ## 🗃️ Backup Details
-### Backup Type: Full Database Backup
+
+### File naming format:
 ```text
-File naming format:
 Backup_yyyyMMdd_HHmmss.bak
 ```
