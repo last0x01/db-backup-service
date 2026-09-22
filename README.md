@@ -1,33 +1,60 @@
-# 🗄️ Database Backup Service
+# Database Backup Service
 
-[![.NET](https://img.shields.io/badge/.NET-4.7+-blue)](https://dotnet.microsoft.com/)
-[![Windows Service](https://img.shields.io/badge/Windows%20Service-Ready-green)]()
+![.NET](https://img.shields.io/badge/.NET%20Framework-4.7%2B-blue)
+![C#](https://img.shields.io/badge/language-C%23-178600?logo=csharp&logoColor=white)
+![Windows Service](https://img.shields.io/badge/Windows%20Service-Ready-green)
+![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)
 
-Automated Windows Service for performing scheduled full backups of a SQL Server database.
-
----
-
-## 📌 Overview
-- Performs **full database backups** using SQL Server  
-- Executes backup via **stored procedure**  
-- Runs on a **configurable time interval**  
-- Saves backup files to a **backup folder**  
-- Logs all operations to a **log folder**  
-- Supports **console mode** for debugging  
-- Configurable via `App.config`  
+An automated **Windows Service** that performs **scheduled full backups** of a SQL Server database and writes them to a configurable folder, with timestamped file naming and built-in logging.
 
 ---
 
-## 📝 Requirements
-- Windows 10 / 11 or Server editions  
-- .NET Framework 4.7+  
-- SQL Server (Local or Remote)  
-- Admin privileges to create/manage Windows Service  
-- Service account with **write access** to backup and log folders  
+## Overview
+
+- Runs as a native Windows Service (or in **console mode** for debugging)
+- Takes a **full database backup** using the stored procedure `SP_FullBackupDatabase`
+- Backup runs on a **configurable time interval** (minutes)
+- Creates the backup folder automatically if it does not exist
+- Backup files are named `Backup_yyyyMMdd_HHmmss.bak`
+- Logs every operation to `Logs.txt` in a configurable log folder
+- Fully configurable through `App.config`
 
 ---
 
-## ⚙ Configuration (`App.config`)
+## Project Structure
+
+```
+DatabaseBackUpService.sln
+├── Program.cs                      # Service entry point (console vs. service mode)
+├── DatabaseBackUpService.cs        # Core backup logic + timer scheduling
+├── ProjectInstaller.cs             # Windows Service installer metadata
+├── StoredProcedure/
+│   └── SP_FullBackupDatabase.sql   # Backup stored procedure (deploy to target DB)
+├── App.config                      # Connection string + folder/interval settings
+└── Properties/
+```
+
+---
+
+## Requirements
+
+- Windows 10 / 11 or Windows Server
+- .NET Framework 4.7+
+- SQL Server (local or remote, with backup permissions)
+- Admin privileges to create/manage the Windows Service
+- The service account needs **write access** to the backup and log folders
+
+---
+
+## Configuration (`App.config`)
+
+| Key                     | Description                                              | Example                                  |
+| ----------------------- | -------------------------------------------------------- | ---------------------------------------- |
+| `ConnectionString`      | SQL Server connection string for the target database     | `Server=YOUR_SERVER;Database=YOUR_DB;Trusted_Connection=True;` |
+| `BackupFolder`          | Where `.bak` files are written                           | `C:\DatabaseBackups\`                    |
+| `LogFolder`             | Where `Logs.txt` is written                              | `C:\DatabaseBackups\Logs\`               |
+| `BackupIntervalMinutes` | Backup frequency in minutes (defaults to `60`)           | `1`                                      |
+
 ```xml
 <appSettings>
   <add key="ConnectionString" value="Server=YOUR_SERVER;Database=YOUR_DATABASE;Trusted_Connection=True;" />
@@ -37,45 +64,50 @@ Automated Windows Service for performing scheduled full backups of a SQL Server 
 </appSettings>
 ```
 
-## 🚀 Installation & Commands
+---
 
-### Create Service
+## Setup
+
+### 1. Deploy the stored procedure
+
+Run `StoredProcedure/SP_FullBackupDatabase.sql` on the target database **before** starting the service. The service invokes this stored procedure on every scheduled run.
+
+### 2. Build & install the service
+
+Build the solution in Visual Studio, then register it as a Windows Service:
+
 ```cmd
 sc create DatabaseBackUpService binPath= "C:\Path\To\DatabaseBackUpService.exe" start= auto
 ```
 
-### Start Service
+### 3. Manage the service
+
 ```cmd
-sc start DatabaseBackUpService
+sc start   DatabaseBackUpService   // Start
+sc stop    DatabaseBackUpService   // Stop
+sc delete  DatabaseBackUpService   // Remove
 ```
 
-### Stop Service
+### 4. Run in console mode (debugging)
+
+Running the `.exe` directly starts it interactively — useful for testing without installer/admin setup:
+
 ```cmd
-sc stop DatabaseBackUpService
+DatabaseBackUpService.exe
 ```
 
-### Delete Service
-```cmd
-sc delete DatabaseBackUpService
-```
+---
 
-## 📄 Logging
+## Logging
 
-### Sample output:
+Sample output written to `Logs.txt`:
+
 ```text
 [2026-01-16 16:00:00] Service Started.
 [2026-01-16 16:00:01] Backup schedule Initiated: every 1 minute(s).
 [2026-01-16 16:01:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160101.bak
 [2026-01-16 16:02:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160201.bak
-[2026-01-16 16:03:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160301.bak
-[2026-01-16 16:04:01] Database Backup Created Successfully C:\DatabaseBackups\Backup_20260116_160401.bak
 [2026-01-16 16:05:00] Service Stopped.
-
 ```
 
-## 🗃️ Backup Details
-
-### File naming format:
-```text
-Backup_yyyyMMdd_HHmmss.bak
-```
+Backup file naming convention: `Backup_yyyyMMdd_HHmmss.bak`
